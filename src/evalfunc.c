@@ -3281,6 +3281,8 @@ f_execute(typval_T *argvars, typval_T *rettv)
 	    return;
     }
 
+    int save_msg_col = msg_col;
+    int should_restore_col = 0;
     if (argvars[1].v_type != VAR_UNKNOWN)
     {
 	char_u	buf[NUMBUFLEN];
@@ -3289,7 +3291,10 @@ f_execute(typval_T *argvars, typval_T *rettv)
 	if (s == NULL)
 	    return;
 	if (STRNCMP(s, "silent", 6) == 0)
+	{
 	    ++msg_silent;
+	    should_restore_col = 1;
+	}
 	if (STRCMP(s, "silent!") == 0)
 	{
 	    emsg_silent = TRUE;
@@ -3297,7 +3302,10 @@ f_execute(typval_T *argvars, typval_T *rettv)
 	}
     }
     else
+    {
 	++msg_silent;
+	should_restore_col = 1;
+    }
 
     if (redir_execute)
 	save_ga = redir_execute_ga;
@@ -3337,8 +3345,9 @@ f_execute(typval_T *argvars, typval_T *rettv)
     redir_off = save_redir_off;
 
     /* "silent reg" or "silent echo x" leaves msg_col somewhere in the
-     * line.  Put it back in the first column. */
-    msg_col = 0;
+     * line.  Put it back to the original column. */
+    if (should_restore_col)
+	msg_col = save_msg_col;
 }
 
 /*
